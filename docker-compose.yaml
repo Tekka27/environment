@@ -1,0 +1,159 @@
+#Versão do docker-compose
+version: "3.3"
+
+#As redes definem as regras de comunicação entre contêineres e entre um contêiner e o host
+networks:
+  network:
+    driver: bridge
+
+#Volumes
+volumes:
+  mysql:
+  redis:
+
+    #Serviços referem-se à configuração de cada container(Imagem)
+services:
+  php:
+    #Constroi uma imagem a partir do código-fonte lendo o meu Dockerfile
+    build:
+      context: ./php/
+      dockerfile: Dockerfile
+    #Puxa a imagem original ou a pretendida do DockerHub, neste caso imagem - php
+    image: ${php_image}
+    #Nome do container que será exibido no docker desktop
+    container_name: php
+    #Configurado para sempre reiniciar
+    restart: unless-stopped
+    tty: true
+    #Indica o path de qual .env_file utilizar
+    env_file:
+      - .env.${APP_ENV}
+    #Apenas quando o serviço mysql está on é que o php inicia
+    depends_on:
+      - mysql
+    #Volume é um diretório compartilhado no host
+    #Mapeia um diretório do host para ser acessível pelo container;
+    volumes:
+      - ./php:/var/www
+    #As zonas de rede comuns tornarão os serviços dos contêineres detectáveis ​​uns pelos outros
+    networks:
+      - network
+
+  #Base de dados
+  mysql:
+    #Puxa a imagem original ou a pretendida do DockerHub, neste caso imagem - mysql
+    image: ${DB_image}
+    container_name: mysql
+    #Definimos variáveis ​​de ambiente estáticas e também definir variáveis ​​dinâmicas com a notação ${}
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: ${DB_TAG}
+      SERVICE_NAME: ${DB_CONNECTION}
+    
+    #O container está exposto na porta 3306 no docker e na porta 3306 do host
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    volumes:
+      - mysql:/var/lib/mysql
+    networks:
+      - network
+
+  #Servico de Web-Server
+  nginx:
+    #Puxa a imagem original ou a pretendida do DockerHub, neste caso imagem - nginx
+    image: ${nginx_image}
+    container_name: nginx
+    #Configurado para sempre reiniciar
+    restart: unless-stopped
+    #Terminal de conecção entreo utilizador com o fluxo stdin e stdout (TeleTYpewriter)
+    #E serve para manter o container a correr
+    tty: true
+    #Apenas quando o serviço php está on é que o ngnix inicia
+    depends_on:
+      - php
+    #O container está exposto na porta 80 no docker e na porta 80 do host
+    ports:
+      - 80:80
+    volumes:
+      - ./php:/var/www
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    networks:
+      - network
+
+  redis:
+    #image - é usada para especificar a imagem do dockerhub para nosso redis
+    image: ${redis_image}
+    container_name: redis
+    #Configurado para sempre reiniciar
+    restart: unless-stopped
+    tty: true
+    #O container está exposto na porta 6379 no docker e na porta 6379 do host
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+    environment:
+      CACHE_DRIVER: ${CACHE_DRIVER}
+      REDIS_CLIENT: ${REDIS_CLIENT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}      
+    volumes:
+      - redis:/data
+    networks:
+      - network
+
+  #Gestor de Base de dados (Oferece uma interface para gerir a base de dados)     
+  phpmyadmin:
+    #image - é usada para especificar a imagem do dockerhub para nosso phpmyadmin
+    image: ${phpmyadmin_image}
+    container_name: phpmyadmin
+    #Configurado para sempre reiniciar
+    restart: unless-stopped
+    #Apenas quando o serviço phpmyadmin está on é que o mysql inicia
+    depends_on:
+      - mysql
+    #O container está exposto na porta 8200 no docker e na porta 80 do host
+    ports:
+      - 8200:80
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      #MYSQL_PASSWORD: ${DB_PASSWORD}
+      #MYSQL_USER: ${DB_USERNAME}
+      #Define o endereço/nome do host do servidor MySQL
+      PMA_HOST: ${PMA_HOST}
+      #Define a porta do servidor MySQL
+      PMA_PORT: ${PMA_PORT}
+      #Define nome de usuário e senha
+      PMA_USER: ${PMA_USER}
+      PMA_PASSWORD: ${PMA_PASSWORD}
+    networks:
+      - network
+
+
+  # #Base de dados  
+  # postgres:
+  #     image: ${postgres_image}
+  #     container_name: postgres
+  #     restart: unless-stopped
+  #     # mapeia a porta 5432 no host para a porta 5432 no contêiner
+  #     #O container está exposto na porta 8080 e na porta 8080 do host
+  #     ports:
+  #         #- 8300:80
+  #         - 5432:5432
+  #     environment:
+  #         POSTGRES_USER: ${POSTGRES_USER}
+  #         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #         POSTGRES_DB: ${POSTGRES_DB}
+  #         POSTGRES_PORT: ${POSTGRES_PORT}
+  #         PGDATA: /var/lib/postgresql/datapg
+  #     volumes:
+
+  #         - ./postgres/data/:/var/lib/postgresql/data
+
+
+  #         # copy the sql script to create tables
+  #         - ./sql/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+  #     networks: 
+  #         - network 
