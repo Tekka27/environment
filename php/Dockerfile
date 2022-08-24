@@ -1,6 +1,6 @@
 #Codigo para instalar o pdo_mysql e criar assim uma imagem personalizada
 #Imagem base
-FROM php:fpm-buster
+FROM php:8.0.2-fpm-buster
 
 
 #RUN - Especifica que o argumento seguinte será executado, ou seja, realiza a execução de um comando;
