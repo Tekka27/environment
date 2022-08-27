@@ -1,4 +1,3 @@
-#Codigo para instalar o pdo_mysql e criar assim uma imagem personalizada
 #Imagem base
 FROM php:8.1-fpm-buster
 
@@ -17,10 +16,11 @@ RUN apt-get update
 RUN apt-get install -y git zip unzip
 
 WORKDIR /var/www
-#COPY . .
-COPY . /var/www
 
-RUN chown -R www-data:www-data /var/www
+USER www
+COPY --chown=www-data:www-data . /var/www
+
+COPY . .
 
 #Expõem uma ou mais portas, isso quer dizer que o container quando iniciado poderá ser acessível através dessas portas;
 #Expose port 9000 and start php-fpm server
