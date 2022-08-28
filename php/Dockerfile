@@ -19,7 +19,7 @@ WORKDIR /var/www
 
 COPY . .
 
-RUN chmod 777 storage/logs
+#RUN chmod 777 storage/logs
 
 #Expõem uma ou mais portas, isso quer dizer que o container quando iniciado poderá ser acessível através dessas portas;
 #Expose port 9000 and start php-fpm server
