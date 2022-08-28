@@ -17,10 +17,9 @@ RUN apt-get install -y git zip unzip
 
 WORKDIR /var/www
 
-USER www
-COPY --chown=www-data:www-data . /var/www
-
 COPY . .
+
+RUN chown www-data:www-data -R /var/www
 
 #Expõem uma ou mais portas, isso quer dizer que o container quando iniciado poderá ser acessível através dessas portas;
 #Expose port 9000 and start php-fpm server
