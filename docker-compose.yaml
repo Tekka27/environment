@@ -80,7 +80,7 @@ services:
     volumes:
       - ./php:/var/www
       #- ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx:/etc/nginx/conf.d/
+      - ./nginx/:/etc/nginx/conf.d/
     networks:
       - network
 
