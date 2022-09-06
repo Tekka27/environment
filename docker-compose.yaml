@@ -27,7 +27,7 @@ services:
     tty: true
     #Indica o path de qual .env_file utilizar
     env_file:
-      - .env
+      - ${ENVIRON}.env
     #Apenas quando o serviço mysql está on é que o php inicia
     depends_on:
       - mysql
